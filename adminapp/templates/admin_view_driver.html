@@ -1,0 +1,46 @@
+{% extends 'admin_index.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center">Pending Driver Registrations</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Place</th>
+                <th>Aadhar Card</th>
+                <th>Status</th>
+                <th>Actions</th>  <!-- New column for buttons -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for driver in drivers %}
+            <tr>
+                <td>{{ driver.name }}</td>
+                <td>{{ driver.email }}</td>
+                <td>{{ driver.phone }}</td>
+                <td>{{ driver.place }}</td>
+                <td>
+                    {% if driver.aadhar_card %}
+                        <a href="{{ driver.aadhar_card.url }}" target="_blank">View Aadhar</a>
+                    {% else %}
+                        No Aadhar Uploaded
+                    {% endif %}
+                </td>
+                <td>{{ driver.status }}</td>
+                <td>
+                    <a href="{% url 'approve_driver' driver.id %}" class="btn btn-success btn-sm">Approve</a>
+                    <a href="{% url 'reject_driver' driver.id %}" class="btn btn-danger btn-sm">Reject</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No pending drivers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
