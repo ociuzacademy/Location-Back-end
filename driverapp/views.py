@@ -5,11 +5,14 @@ from rest_framework import viewsets
 from driverapp.models import DriverRegister
 from driverapp.serializers import DriverRegisterSerializer
 
+from rest_framework import viewsets
+from .models import DriverRegister
+from .serializers import DriverRegisterSerializer
+
 class DriverRegisterViewSet(viewsets.ModelViewSet):
     queryset = DriverRegister.objects.all().order_by('-id')
     serializer_class = DriverRegisterSerializer
-    http_method_names=['post']
-
+    http_method_names = ['post']  # Restricting to only POST requests
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -32,7 +35,7 @@ class DriverLoginView(APIView):
             if driver.status != 'approved':
                 return Response({'error': 'Your account is not approved'}, status=status.HTTP_403_FORBIDDEN)
 
-            return Response({'message': 'Login successful', 'driver_id': driver.id, 'name': driver.name,'role':'driver',"password":driver.password}, status=status.HTTP_200_OK)
+            return Response({'message': 'Login successful', 'driver_id': driver.id, 'name': driver.name,'role':'driver',"email":driver.email,"password":driver.password}, status=status.HTTP_200_OK)
 
         except DriverRegister.DoesNotExist:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)

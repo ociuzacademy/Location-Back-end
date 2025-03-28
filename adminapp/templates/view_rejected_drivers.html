@@ -10,7 +10,7 @@
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Place</th>
-                <th>Aadhar Card</th>
+                <th>Aadhar Number</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -21,18 +21,14 @@
                 <td>{{ driver.email }}</td>
                 <td>{{ driver.phone }}</td>
                 <td>{{ driver.place }}</td>
-                <td>
-                    {% if driver.aadhar_card %}
-                        <a href="{{ driver.aadhar_card.url }}" target="_blank">View Aadhar</a>
-                    {% else %}
-                        No Aadhar Uploaded
-                    {% endif %}
-                </td>
-                <td class="text-danger">{{ driver.status }}</td>
+
+                <td>{{ driver.aadhar_number }}</td>
+
+                <td class="text-success">{{ driver.status }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5" class="text-center">No rejected drivers found.</td>
+                <td colspan="5" class="text-center">No approved drivers found.</td>
             </tr>
             {% endfor %}
         </tbody>

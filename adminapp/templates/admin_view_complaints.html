@@ -12,14 +12,17 @@
                 <th>Phone</th>
                 <th>Place</th>
                 <th>Latitude</th>
-                <th>longitude</th>
+                <th>Longitude</th>
                 <th>Description</th>
                 <th>Image</th>
                 <th>Bin Requested</th>
                 <th>Status</th>
                 <th>Date</th>
                 <th>Action</th>
-                <th>Bin Status</th> <!-- Add column header -->
+                {% if complaints|dictsort:"bin" %}
+
+                <th>Bin Status</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -30,7 +33,7 @@
                 <td>{{ complaint.name }}</td>
                 <td>{{ complaint.phone }}</td>
                 <td>{{ complaint.place }}</td>
-                <td>{{ complaint.latitude}}</td>
+                <td>{{ complaint.latitude }}</td>
                 <td>{{ complaint.longitude }}</td>
                 <td>{{ complaint.description }}</td>
                 <td>
@@ -54,20 +57,22 @@
                     {% endif %}
                 </td>
 
+                {% if complaint.bin %}
                 <td>
                     <form action="{% url 'update_bin_status' complaint.id 'placed' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success" {% if complaint.bin_status|lower == "placed" %}disabled{% endif %}>
+                        <button type="submit" class="btn btn-success" {% if complaint.bin_status == "placed" %}disabled{% endif %}>
                             Mark as Placed
                         </button>
                     </form>
                     <form action="{% url 'update_bin_status' complaint.id 'not_placed' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" {% if complaint.bin_status|lower == "not_placed" %}disabled{% endif %}>
+                        <button type="submit" class="btn btn-danger" {% if complaint.bin_status == "not_placed" %}disabled{% endif %}>
                             Mark as Not Placed
                         </button>
                     </form>
                 </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
