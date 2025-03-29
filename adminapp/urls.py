@@ -20,7 +20,7 @@ urlpatterns = [
       path("employees/", list_employees, name="list_employees"),
     path("employees/edit/<int:employee_id>/", edit_employee, name="edit_employee"),
     path("employees/delete/<int:employee_id>/", delete_employee, name="delete_employee"),
-    path('admin/feedbacks/', admin_feedback_list, name='admin_feedback_list'),
+    path('feedbacks/', admin_feedback_list, name='admin_feedback_list'),
     
 
 
@@ -37,14 +37,14 @@ urlpatterns = [
 
 
 
-    path('admin/view-drivers/', views.admin_view_driver, name='admin_view_driver'),
-    path('admin/approve-driver/<int:driver_id>/', approve_driver, name='approve_driver'),
-    path('admin/reject-driver/<int:driver_id>/', reject_driver, name='reject_driver'),
-     path('admin/view-approved-drivers/', view_approved_drivers, name='view_approved_drivers'),
-    path('admin/view-rejected-drivers/', view_rejected_drivers, name='view_rejected_drivers'),
-    path('admin/view-complaints/', view_complaints, name='view_complaints'),
-     path('admin/allocate-complaint/<int:complaint_id>/', allocate_complaint, name='allocate_complaint'),
-    path('admin/assign-driver/<int:complaint_id>/<int:driver_id>/', assign_driver, name='assign_driver'),
+    path('view-drivers/', views.admin_view_driver, name='admin_view_driver'),
+    path('approve-driver/<int:driver_id>/', approve_driver, name='approve_driver'),
+    path('reject-driver/<int:driver_id>/', reject_driver, name='reject_driver'),
+     path('view-approved-drivers/', view_approved_drivers, name='view_approved_drivers'),
+    path('view-rejected-drivers/', view_rejected_drivers, name='view_rejected_drivers'),
+    path('view-complaints/', view_complaints, name='view_complaints'),
+     path('allocate-complaint/<int:complaint_id>/', allocate_complaint, name='allocate_complaint'),
+    path('assign-driver/<int:complaint_id>/<int:driver_id>/', assign_driver, name='assign_driver'),
      path('update-bin-status/<int:complaint_id>/<str:status>/', update_bin_status, name='update_bin_status'),
 
     
