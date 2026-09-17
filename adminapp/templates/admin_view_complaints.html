@@ -1,9 +1,481 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Complaint List</h2>
-    <table class="table table-bordered">
+<style>
+    /* Complaints List Page Styles */
+    .complaints-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .complaints-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .complaints-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .complaints-header-icon {
+        font-size: 40px;
+    }
+
+    .complaints-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .complaints-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .complaints-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+        flex-wrap: wrap;
+    }
+
+    .stats-bar i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #667eea;
+    }
+
+    .stats-bar .divider {
+        color: #ddd;
+        margin: 0 8px;
+    }
+
+    /* Table Container */
+    .complaints-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow-x: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .complaints-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        min-width: 1400px;
+    }
+
+    .complaints-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .complaints-table th {
+        padding: 14px 16px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .complaints-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .complaints-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .complaints-table td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 13px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .complaints-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .complaints-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .complaints-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* ID Badge */
+    .complaint-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 10px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* User Cell */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .user-avatar-sm {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    /* Coordinates */
+    .coord-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #666;
+        white-space: nowrap;
+    }
+
+    /* Description Text */
+    .description-text {
+        max-width: 200px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.4;
+    }
+
+    /* Complaint Image */
+    .complaint-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .complaint-image:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .no-image {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        background: #f3f4f6;
+        border-radius: 8px;
+        color: #999;
+        font-size: 20px;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-in-progress {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-resolved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* Bin Badge */
+    .bin-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .bin-yes {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+    }
+
+    .bin-no {
+        background: #f3f4f6;
+        color: #999;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-allocate {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+    }
+
+    .btn-allocate:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        color: #fff;
+    }
+
+    .btn-allocated {
+        background: #e5e7eb;
+        color: #999;
+        cursor: not-allowed;
+    }
+
+    .btn-placed {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-placed:hover:not(:disabled) {
+        background: #28a745;
+        color: #fff;
+    }
+
+    .btn-not-placed {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-not-placed:hover:not(:disabled) {
+        background: #dc3545;
+        color: #fff;
+    }
+
+    .btn-action:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* Bin Status Cell */
+    .bin-status-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+    }
+
+    /* Scroll Hint */
+    .scroll-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #f0f4ff;
+        border-radius: 8px;
+        color: #667eea;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .complaints-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .complaints-header h1 {
+            font-size: 24px;
+        }
+
+        .complaints-header-icon {
+            font-size: 32px;
+        }
+
+        .complaints-table-container {
+            padding: 15px;
+        }
+
+        .complaints-table th,
+        .complaints-table td {
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .stats-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .stats-bar .divider {
+            display: none;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="complaints-header">
+    <div class="complaints-header-left">
+        <div class="complaints-header-icon">⚠️</div>
+        <div>
+            <h1>Complaint List</h1>
+            <p class="complaints-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <span>Complaints</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>Total Complaints: <strong>{{ complaints|length }}</strong></span>
+    <span class="divider">|</span>
+    <i class="fas fa-trash-alt"></i>
+    <span>Bin Requests: <strong>{{ complaints|dictsort:"bin"|length }}</strong></span>
+</div>
+
+<!-- Scroll Hint -->
+<div class="scroll-hint">
+    <i class="fas fa-arrows-left-right"></i>
+    Scroll horizontally to view all columns
+</div>
+
+<!-- Table Container -->
+<div class="complaints-table-container">
+    {% if complaints %}
+    <table class="complaints-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -20,7 +492,6 @@
                 <th>Date</th>
                 <th>Action</th>
                 {% if complaints|dictsort:"bin" %}
-
                 <th>Bin Status</th>
                 {% endif %}
             </tr>
@@ -28,54 +499,131 @@
         <tbody>
             {% for complaint in complaints %}
             <tr>
-                <td>{{ complaint.id }}</td>
-                <td>{{ complaint.user.name }}</td>
+                <td>
+                    <span class="complaint-id-badge">#{{ complaint.id }}</span>
+                </td>
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar-sm">
+                            {{ complaint.user.name|slice:":1"|upper }}
+                        </div>
+                        <span>{{ complaint.user.name }}</span>
+                    </div>
+                </td>
                 <td>{{ complaint.name }}</td>
-                <td>{{ complaint.phone }}</td>
-                <td>{{ complaint.place }}</td>
-                <td>{{ complaint.latitude }}</td>
-                <td>{{ complaint.longitude }}</td>
-                <td>{{ complaint.description }}</td>
+                <td>
+                    <i class="fas fa-phone" style="color: #667eea; font-size: 10px; margin-right: 4px;"></i>
+                    {{ complaint.phone }}
+                </td>
+                <td>
+                    <i class="fas fa-map-marker-alt" style="color: #667eea; font-size: 10px; margin-right: 4px;"></i>
+                    {{ complaint.place }}
+                </td>
+                <td>
+                    <span class="coord-cell">{{ complaint.latitude }}</span>
+                </td>
+                <td>
+                    <span class="coord-cell">{{ complaint.longitude }}</span>
+                </td>
+                <td>
+                    <div class="description-text" title="{{ complaint.description }}">
+                        {{ complaint.description }}
+                    </div>
+                </td>
                 <td>
                     {% if complaint.image %}
-                    <img src="{{ complaint.image.url }}" alt="Complaint Image" width="100">
+                    <a href="{{ complaint.image.url }}" target="_blank">
+                        <img src="{{ complaint.image.url }}" alt="Complaint Image" class="complaint-image">
+                    </a>
                     {% else %}
-                    No Image
+                    <div class="no-image">
+                        <i class="fas fa-image"></i>
+                    </div>
                     {% endif %}
                 </td>
-                <td>{{ complaint.bin|yesno:"Yes,No" }}</td>
-                <td>{{ complaint.get_status_display }}</td>
-                <td>{{ complaint.date }}</td>
+                <td>
+                    {% if complaint.bin %}
+                    <span class="bin-badge bin-yes">
+                        <i class="fas fa-check"></i> Yes
+                    </span>
+                    {% else %}
+                    <span class="bin-badge bin-no">
+                        <i class="fas fa-times"></i> No
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if complaint.get_status_display == "Pending" %}
+                    <span class="status-badge status-pending">
+                        <i class="fas fa-clock"></i> Pending
+                    </span>
+                    {% elif complaint.get_status_display == "In Progress" %}
+                    <span class="status-badge status-in-progress">
+                        <i class="fas fa-spinner"></i> In Progress
+                    </span>
+                    {% elif complaint.get_status_display == "Resolved" %}
+                    <span class="status-badge status-resolved">
+                        <i class="fas fa-check-circle"></i> Resolved
+                    </span>
+                    {% elif complaint.get_status_display == "Rejected" %}
+                    <span class="status-badge status-rejected">
+                        <i class="fas fa-times-circle"></i> Rejected
+                    </span>
+                    {% else %}
+                    <span class="status-badge status-pending">{{ complaint.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="date-cell" style="font-size: 12px; color: #666; white-space: nowrap;">
+                        <i class="fas fa-calendar" style="color: #667eea; font-size: 10px; margin-right: 4px;"></i>
+                        {{ complaint.date }}
+                    </div>
+                </td>
                 <td>
                     {% if complaint.driver %}
-                    <button class="btn btn-secondary" disabled>Allocated</button>
+                    <button class="btn-action btn-allocated" disabled>
+                        <i class="fas fa-check"></i> Allocated
+                    </button>
                     {% else %}
-                    <form action="{% url 'allocate_complaint' complaint.id %}" method="post">
+                    <form action="{% url 'allocate_complaint' complaint.id %}" method="post" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Allocate</button>
+                        <button type="submit" class="btn-action btn-allocate">
+                            <i class="fas fa-user-plus"></i> Allocate
+                        </button>
                     </form>
                     {% endif %}
                 </td>
 
                 {% if complaint.bin %}
                 <td>
-                    <form action="{% url 'update_bin_status' complaint.id 'placed' %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success" {% if complaint.bin_status == "placed" %}disabled{% endif %}>
-                            Mark as Placed
-                        </button>
-                    </form>
-                    <form action="{% url 'update_bin_status' complaint.id 'not_placed' %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" {% if complaint.bin_status == "not_placed" %}disabled{% endif %}>
-                            Mark as Not Placed
-                        </button>
-                    </form>
+                    <div class="bin-status-cell">
+                        <form action="{% url 'update_bin_status' complaint.id 'placed' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-action btn-placed" {% if complaint.bin_status == "placed" %}disabled{% endif %}>
+                                <i class="fas fa-check-circle"></i> Placed
+                            </button>
+                        </form>
+                        <form action="{% url 'update_bin_status' complaint.id 'not_placed' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-action btn-not-placed" {% if complaint.bin_status == "not_placed" %}disabled{% endif %}>
+                                <i class="fas fa-times-circle"></i> Not Placed
+                            </button>
+                        </form>
+                    </div>
                 </td>
                 {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <h3>No Complaints Available</h3>
+        <p>Complaints submitted by users will appear here.</p>
+    </div>
+    {% endif %}
 </div>
+
 {% endblock %}

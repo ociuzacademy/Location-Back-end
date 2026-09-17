@@ -4,14 +4,20 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - Location Based Garbage Collector</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* General Styles */
-        body {
+        * {
             margin: 0;
-            font-family: 'Arial', sans-serif;
-            background-color: #f8f9fa;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
             color: #333;
         }
 
@@ -22,29 +28,47 @@
 
         /* Sidebar Styles */
         .sidebar {
-            width: 250px;
-            background-color: #2c3e50;
+            width: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff;
-            padding: 20px;
-            box-sizing: border-box;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(102, 126, 234, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: width 0.3s ease;
+            position: relative;
+            z-index: 100;
+        }
+
+        .sidebar:hover {
+            width: 250px;
         }
 
         .sidebar .logo {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 32px;
             margin-bottom: 30px;
             text-align: center;
             color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar:hover .logo {
+            font-size: 24px;
+            margin-bottom: 20px;
         }
 
         .sidebar .nav {
             list-style: none;
+            width: 100%;
             padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .sidebar .nav li {
-            margin: 15px 0;
+            position: relative;
         }
 
         .sidebar .nav li a {
@@ -52,131 +76,322 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            padding: 12px;
-            border-radius: 4px;
-            transition: background-color 0.3s, transform 0.2s;
+            justify-content: center;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 20px;
+            white-space: nowrap;
+        }
+
+        .sidebar .nav li a .menu-label {
+            display: none;
+        }
+
+        .sidebar:hover .nav li a {
+            justify-content: flex-start;
+            padding-left: 20px;
+            font-size: 16px;
+            gap: 15px;
+        }
+
+        .sidebar:hover .nav li a .menu-label {
+            display: inline;
         }
 
         .sidebar .nav li a:hover {
-            background-color: #34495e;
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .sidebar:hover .nav li a:hover {
             transform: translateX(5px);
+            background-color: rgba(255, 255, 255, 0.25);
         }
 
         .sidebar .nav li a.active {
-            background-color: #34495e;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-left: 4px solid #fff;
+        }
+
+        .sidebar:hover .nav li a.active {
+            border-left: 4px solid #fff;
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: absolute;
+            left: 100px;
+            background-color: #2d3748;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 200;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #2d3748;
+        }
+
+        .sidebar:not(:hover) .nav li a:hover .tooltip {
+            opacity: 1;
+        }
+
+        /* Dropdown Styles */
+        .sidebar .nav li.dropdown > a {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .sidebar .nav li.dropdown > a .menu-label {
+            display: none;
+            flex-grow: 1;
+        }
+
+        .sidebar:hover .nav li.dropdown > a .menu-label {
+            display: inline;
+        }
+
+        .sidebar .nav li.dropdown > a .arrow {
+            margin-left: auto;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+            display: none;
+            cursor: pointer;
+        }
+
+        .sidebar:hover .nav li.dropdown > a .arrow {
+            display: inline;
+            margin-left: auto;
         }
 
         .sidebar .nav li.dropdown .dropdown-menu {
             display: none;
             list-style: none;
-            padding-left: 20px;
+            padding: 0;
             margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
         }
 
         .sidebar .nav li.dropdown .dropdown-menu li a {
-            padding: 10px;
-            background-color: #34495e;
-            border-radius: 4px;
-            margin: 5px 0;
+            padding: 12px 15px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 0;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar .nav li.dropdown .dropdown-menu li a i {
+            min-width: 20px;
+            text-align: center;
         }
 
         .sidebar .nav li.dropdown .dropdown-menu li a:hover {
-            background-color: #3b4f63;
+            background-color: rgba(255, 255, 255, 0.15);
         }
 
         .sidebar .nav li.dropdown.active .dropdown-menu {
             display: block;
         }
 
-        .sidebar .nav li a .arrow {
-            margin-left: auto;
-            transition: transform 0.3s;
-        }
-
-        .sidebar .nav li.dropdown.active a .arrow {
+        .sidebar .nav li.dropdown.active > a .arrow {
             transform: rotate(180deg);
         }
 
         /* Main Content Styles */
         .main-content {
             flex-grow: 1;
-            padding: 30px;
-            background-color: #fff;
+            padding: 40px;
+            background-color: #f5f7fa;
+            overflow-y: auto;
         }
 
         .main-content header {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .main-content header h1 {
-            font-size: 28px;
+            font-size: 32px;
             color: #2c3e50;
-            margin: 0;
+            font-weight: 700;
         }
 
-        .main-content .content {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+        .header-info {
+            font-size: 14px;
+            color: #666;
         }
 
-        .main-content .content h2 {
-            font-size: 22px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-
+        /* Stats Section */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
 
         .stat-item {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 30px;
+            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .stat-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.35);
+        }
+
+        .stat-item-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
         }
 
         .stat-item h3 {
-            font-size: 18px;
-            color: #555;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 10px;
+            font-weight: 500;
         }
 
         .stat-item p {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Content Section */
+        .content-section {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .content-section h2 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content-section h2::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        /* Threshold Section */
+        .threshold-form {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
             color: #2c3e50;
         }
 
-        .recent-activities {
-            list-style: none;
-            padding: 0;
+        .form-group input {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            min-width: 150px;
         }
 
-        .recent-activities li {
-            background-color: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 10px;
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .threshold-form button {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .threshold-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 15px 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
         }
 
-        .recent-activities li:hover {
-            transform: translateX(5px);
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
         }
 
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -184,31 +399,68 @@
         }
 
         table th, table td {
-            padding: 12px;
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         table th {
-            background-color: #2c3e50;
-            color: #fff;
+            background-color: #f3f4f6;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 14px;
         }
 
         table tr:hover {
-            background-color: #f8f9fa;
-        }
-        /* Charts */
-        .chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 300px;
+            background-color: #f9fafb;
         }
 
-        #wasteChart,
-        #statusChart {
-            max-width: 400px;
-            max-height: 300px;
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 15px 0;
+            }
+
+            .sidebar:hover {
+                width: 200px;
+            }
+
+            .sidebar .logo {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+
+            .sidebar .nav li a {
+                padding: 12px;
+                font-size: 18px;
+            }
+
+            .sidebar:hover .nav li a {
+                font-size: 14px;
+                padding-left: 15px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .main-content header h1 {
+                font-size: 24px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .threshold-form {
+                flex-direction: column;
+            }
+
+            .form-group input {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -216,92 +468,195 @@
     <div class="dashboard">
         <!-- Sidebar -->
         <div class="sidebar">
-            <div class="logo">Admin Panel</div>
+            <div class="logo">♻️</div>
             <ul class="nav">
-                <li><a href="{% url 'admin_index' %}" class="active">Home</a></li>
+                <li>
+                    <a href="{% url 'admin_index' %}" class="active" title="Home">
+                        <i class="fas fa-home"></i>
+                        <span class="menu-label">Home</span>
+                        <span class="tooltip">Home</span>
+                    </a>
+                </li>
+
                 <li class="dropdown">
-                    <a href="#">Category <span class="arrow">&#9660;</span></a>
+                    <a href="#" title="Category">
+                        <i class="fas fa-tags"></i>
+                        <span class="menu-label">Categories</span>
+                        <span class="arrow">▼</span>
+                        <span class="tooltip">Categories</span>
+                    </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url 'add_category' %}">Add</a></li>
-                        <li><a href="{% url 'list_categories' %}">List</a></li>
+                        <li><a href="{% url 'add_category' %}"><i class="fas fa-plus-circle"></i> Add Category</a></li>
+                        <li><a href="{% url 'list_categories' %}"><i class="fas fa-list-ul"></i> View All</a></li>
                     </ul>
                 </li>
 
                 <li class="dropdown">
-                    <a href="#">Wards <span class="arrow">&#9660;</span></a>
+                    <a href="#" title="Wards">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="menu-label">Wards</span>
+                        <span class="arrow">▼</span>
+                        <span class="tooltip">Wards</span>
+                    </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url 'add_ward' %}">Add</a></li>
-                        <li><a href="{% url 'list_wards' %}">List</a></li>
+                        <li><a href="{% url 'add_ward' %}"><i class="fas fa-plus-circle"></i> Add Ward</a></li>
+                        <li><a href="{% url 'list_wards' %}"><i class="fas fa-list-ul"></i> View All</a></li>
                     </ul>
                 </li>
 
                 <li class="dropdown">
-                    <a href="#">Employees <span class="arrow">&#9660;</span></a>
+                    <a href="#" title="Employees">
+                        <i class="fas fa-users"></i>
+                        <span class="menu-label">Employees</span>
+                        <span class="arrow">▼</span>
+                        <span class="tooltip">Employees</span>
+                    </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url 'register_employee' %}">Register Employee</a></li>
-                        <li><a href="{% url 'list_employees' %}">List Employees</a></li>
+                        <li><a href="{% url 'register_employee' %}"><i class="fas fa-user-plus"></i> Register Employee</a></li>
+                        <li><a href="{% url 'list_employees' %}"><i class="fas fa-list-ul"></i> View All</a></li>
                     </ul>
                 </li>
 
-                <li><a href="{% url 'admin_feedback_list' %}">View Feedback</a></li>
-                <li><a href="{% url 'ward_requests' %}">Requests</a></li>
+                <li>
+                    <a href="{% url 'admin_feedback_list' %}" title="Feedback">
+                        <i class="fas fa-comments"></i>
+                        <span class="menu-label">Feedback</span>
+                        <span class="tooltip">Feedback</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{% url 'ward_requests' %}" title="Requests">
+                        <i class="fas fa-inbox"></i>
+                        <span class="menu-label">Requests</span>
+                        <span class="tooltip">Requests</span>
+                    </a>
+                </li>
+
                 <li class="dropdown">
-                    <a href="#">Drivers <span class="arrow">&#9660;</span></a>
+                    <a href="#" title="Drivers">
+                        <i class="fas fa-car"></i>
+                        <span class="menu-label">Drivers</span>
+                        <span class="arrow">▼</span>
+                        <span class="tooltip">Drivers</span>
+                    </a>
                     <ul class="dropdown-menu">
-                        <li><a href="{% url 'admin_view_driver' %}">Pending Drivers</a></li>
-                        <li><a href="{% url 'view_approved_drivers' %}">Approved Drivers</a></li>
-                        <li><a href="{% url 'view_rejected_drivers' %}">Rejected Drivers</a></li>
+                        <li><a href="{% url 'admin_view_driver' %}"><i class="fas fa-hourglass-half"></i> Pending Approval</a></li>
+                        <li><a href="{% url 'view_approved_drivers' %}"><i class="fas fa-check-circle"></i> Approved</a></li>
+                        <li><a href="{% url 'view_rejected_drivers' %}"><i class="fas fa-times-circle"></i> Rejected</a></li>
                     </ul>
                 </li>
-                <li><a href="{% url 'view_complaints' %}">Complaints</a></li>
 
-                <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+                <li>
+                    <a href="{% url 'view_complaints' %}" title="Complaints">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span class="menu-label">Complaints</span>
+                        <span class="tooltip">Complaints</span>
+                    </a>
+                </li>
+
+                <li style="margin-top: auto; border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 15px;">
+                    <a href="{% url 'admin_logout' %}" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="menu-label">Logout</span>
+                        <span class="tooltip">Logout</span>
+                    </a>
+                </li>
             </ul>
         </div>
-    
-    
+
         <!-- Main Content -->
         <div class="main-content">
             <header>
-                <h1>Admin Dashboard</h1>
+                <div>
+                    <h1>Admin Dashboard</h1>
+                    <p class="header-info">Location Based Garbage Collector System</p>
+                </div>
             </header>
 
             {% block content %}
-           <h1> Admin Panel</h1>
 
-            <h3>Total Waste: {{ total_waste }} kg</h3>
+            <!-- Stats Section -->
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-item-icon">♻️</div>
+                    <h3>Total Waste</h3>
+                    <p>{{ total_waste }} kg</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-icon">📍</div>
+                    <h3>Active Wards</h3>
+                    <p>12</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-icon">👥</div>
+                    <h3>Total Employees</h3>
+                    <p>45</p>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-icon">🚚</div>
+                    <h3>Active Drivers</h3>
+                    <p>28</p>
+                </div>
+            </div>
 
+            <!-- Alerts Section -->
             {% if over_limit %}
-            <div style="color: red; font-weight: bold;">
-                ⚠ Warning! Waste exceeds limit ({{ total_waste }} kg). Max: {{ threshold }} kg.
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Critical Alert!</strong> Waste exceeds limit ({{ total_waste }} kg). Maximum limit: {{ threshold }} kg.
+                </div>
             </div>
             {% endif %}
-            
-            <h3>Set Waste Threshold</h3>
-            <form method="post">
-                {% csrf_token %}
-                <label for="limit">Threshold (kg):</label>
-                <input type="number" step="0.1" name="limit" value="{{ threshold }}" required>
-                <button type="submit">Update</button>
-            </form>
-            
+
+            <!-- Threshold Section -->
+            <div class="content-section">
+                <h2>Waste Threshold Settings</h2>
+                <form method="post" class="threshold-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="limit">Threshold Limit (kg)</label>
+                        <input type="number" step="0.1" id="limit" name="limit" value="{{ threshold }}" required>
+                    </div>
+                    <button type="submit">
+                        <i class="fas fa-save"></i> Update Threshold
+                    </button>
+                </form>
+            </div>
+
+            <!-- Additional Content -->
+            <div class="content-section">
+                <h2>Recent Activities</h2>
+                <p style="color: #666; margin-top: 20px;">System is running smoothly. No critical issues detected.</p>
+            </div>
+
             {% endblock %}
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const dropdowns = document.querySelectorAll('.dropdown');
+            const dropdownArrows = document.querySelectorAll('.sidebar .nav li.dropdown > a .arrow');
     
-            dropdowns.forEach(dropdown => {
-                dropdown.addEventListener('click', function () {
-                    this.classList.toggle('active');
+            dropdownArrows.forEach(arrow => {
+                arrow.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.parentElement.parentElement.classList.toggle('active');
                 });
             });
-        })
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.sidebar .nav li.dropdown')) {
+                    document.querySelectorAll('.sidebar .nav li.dropdown.active').forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
+        });
     </script>
-    
-   
 
 </body>
 </html>

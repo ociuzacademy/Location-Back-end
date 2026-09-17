@@ -1,12 +1,417 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Allocate Complaint #{{ complaint.id }}</h2>
-    <p><strong>Complaint Location:</strong> {{ complaint.place }}</p>
+<style>
+    /* Allocate Complaint Page Styles */
+    .allocate-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
-    {% if drivers %}
-    <table class="table table-bordered">
+    .allocate-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .allocate-header-icon {
+        font-size: 40px;
+    }
+
+    .allocate-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .allocate-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .allocate-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Complaint Info Card */
+    .complaint-info-card {
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-left: 4px solid #667eea;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .complaint-info-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 26px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .complaint-info-details {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-grow: 1;
+    }
+
+    .complaint-info-details h3 {
+        color: #2c3e50;
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .complaint-info-details h3 span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3px 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .complaint-info-details p {
+        color: #555;
+        font-size: 14px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .complaint-info-details p i {
+        color: #667eea;
+        font-size: 14px;
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 20px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-title::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+
+    /* Table Container */
+    .drivers-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow-x: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .drivers-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+    }
+
+    .drivers-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .drivers-table th {
+        padding: 16px 20px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .drivers-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .drivers-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .drivers-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .drivers-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .drivers-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .drivers-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Driver Name Cell */
+    .driver-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .driver-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .driver-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Email Cell */
+    .email-cell {
+        color: #667eea;
+        font-size: 13px;
+    }
+
+    .email-cell i {
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Phone Cell */
+    .phone-cell {
+        color: #555;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .phone-cell i {
+        color: #667eea;
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Assign Button */
+    .btn-assign {
+        padding: 8px 18px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .btn-assign:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-assign:active {
+        transform: translateY(0);
+    }
+
+    /* No Drivers Alert */
+    .no-drivers-alert {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 20px 24px;
+        border-radius: 12px;
+        border-left: 4px solid #dc3545;
+        font-weight: 500;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .no-drivers-alert i {
+        font-size: 24px;
+        color: #dc3545;
+        flex-shrink: 0;
+    }
+
+    /* Back Button */
+    .btn-back {
+        padding: 12px 24px;
+        background: #f0f2f5;
+        color: #2c3e50;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+
+    .btn-back:hover {
+        background: #e8eaed;
+        border-color: #bbb;
+        color: #2c3e50;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .allocate-header h1 {
+            font-size: 24px;
+        }
+
+        .allocate-header-icon {
+            font-size: 32px;
+        }
+
+        .complaint-info-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .drivers-table-container {
+            padding: 15px;
+        }
+
+        .drivers-table th,
+        .drivers-table td {
+            padding: 12px 15px;
+            font-size: 12px;
+        }
+
+        .btn-assign {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .driver-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 13px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="allocate-header">
+    <div class="allocate-header-icon">🚚</div>
+    <div>
+        <h1>Allocate Complaint</h1>
+        <p class="allocate-breadcrumb">
+            <a href="{% url 'admin_index' %}">Dashboard</a> / 
+            <a href="{% url 'view_complaints' %}">Complaints</a> / 
+            <span>Allocate #{{ complaint.id }}</span>
+        </p>
+    </div>
+</div>
+
+<!-- Complaint Info Card -->
+<div class="complaint-info-card">
+    <div class="complaint-info-icon">
+        <i class="fas fa-exclamation-circle"></i>
+    </div>
+    <div class="complaint-info-details">
+        <h3>
+            Complaint <span>#{{ complaint.id }}</span>
+        </h3>
+        <p>
+            <i class="fas fa-map-marker-alt"></i>
+            <strong>Location:</strong> {{ complaint.place }}
+        </p>
+        {% if complaint.description %}
+        <p>
+            <i class="fas fa-align-left"></i>
+            <strong>Description:</strong> {{ complaint.description|truncatewords:15 }}
+        </p>
+        {% endif %}
+        {% if complaint.date %}
+        <p>
+            <i class="fas fa-calendar"></i>
+            <strong>Reported:</strong> {{ complaint.date }}
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Section Title -->
+<div class="section-title">
+    <i class="fas fa-user-check" style="color: #667eea;"></i> Available Drivers
+</div>
+
+<!-- Drivers Table -->
+{% if drivers %}
+<div class="drivers-table-container">
+    <table class="drivers-table">
         <thead>
             <tr>
                 <th>Driver Name</th>
@@ -18,21 +423,55 @@
         <tbody>
             {% for driver in drivers %}
             <tr>
-                <td>{{ driver.name }}</td>
-                <td>{{ driver.email }}</td>
-                <td>{{ driver.phone }}</td>
                 <td>
-                    <form action="{% url 'assign_driver' complaint.id driver.id %}" method="post">
+                    <div class="driver-name-cell">
+                        <div class="driver-avatar">
+                            {{ driver.name|slice:":1"|upper }}
+                        </div>
+                        <span class="driver-name">{{ driver.name }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="email-cell">
+                        <i class="fas fa-envelope"></i>
+                        {{ driver.email }}
+                    </span>
+                </td>
+                <td>
+                    <span class="phone-cell">
+                        <i class="fas fa-phone"></i>
+                        {{ driver.phone }}
+                    </span>
+                </td>
+                <td>
+                    <form action="{% url 'assign_driver' complaint.id driver.id %}" method="post" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success">Assign</button>
+                        <button type="submit" class="btn-assign">
+                            <i class="fas fa-check-circle"></i> Assign
+                        </button>
                     </form>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-        <p class="text-danger">No available drivers in this area.</p>
-    {% endif %}
 </div>
+{% else %}
+<!-- No Drivers Alert -->
+<div class="no-drivers-alert">
+    <i class="fas fa-exclamation-triangle"></i>
+    <div>
+        <strong>No available drivers in this area.</strong><br>
+        <span style="font-size: 13px; font-weight: 400;">Please check back later or ensure drivers are registered for this ward.</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- Back Button -->
+<div style="margin-top: 25px;">
+    <a href="{% url 'view_complaints' %}" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back to Complaints
+    </a>
+</div>
+
 {% endblock %}

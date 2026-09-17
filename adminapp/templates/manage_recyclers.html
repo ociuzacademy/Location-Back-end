@@ -1,14 +1,431 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Manage Recyclers</h2>
-    
-    <table class="table table-striped">
+<style>
+    /* Manage Recyclers Page Styles */
+    .recyclers-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .recyclers-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .recyclers-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .recyclers-header-icon {
+        font-size: 40px;
+    }
+
+    .recyclers-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .recyclers-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .recyclers-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+        flex-wrap: wrap;
+    }
+
+    .stats-bar i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #667eea;
+    }
+
+    /* Table Container */
+    .recyclers-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow-x: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .recyclers-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+    }
+
+    .recyclers-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .recyclers-table th {
+        padding: 16px 20px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .recyclers-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .recyclers-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .recyclers-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .recyclers-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .recyclers-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .recyclers-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Recycler ID Badge */
+    .recycler-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* Profile Picture */
+    .profile-pic-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-pic {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+
+    .profile-pic:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .no-image-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 18px;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Name Cell */
+    .name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Contact Cells */
+    .email-cell {
+        color: #667eea;
+        font-size: 13px;
+    }
+
+    .email-cell i {
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    .phone-cell {
+        color: #555;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .phone-cell i {
+        color: #667eea;
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Aadhar Cell */
+    .aadhar-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #2c3e50;
+        letter-spacing: 1px;
+        background: #f3f4f6;
+        padding: 5px 10px;
+        border-radius: 6px;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    /* Panchayath Cell */
+    .panchayath-cell {
+        color: #555;
+        font-size: 13px;
+    }
+
+    .panchayath-cell i {
+        color: #667eea;
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-edit-recycler {
+        background: rgba(255, 193, 7, 0.15);
+        color: #d39e00;
+        border: 1px solid rgba(255, 193, 7, 0.4);
+    }
+
+    .btn-edit-recycler:hover {
+        background: #ffc107;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(255, 193, 7, 0.3);
+    }
+
+    .btn-delete-recycler {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-delete-recycler:hover {
+        background: #dc3545;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* Scroll Hint */
+    .scroll-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #f0f4ff;
+        border-radius: 8px;
+        color: #667eea;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .recyclers-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .recyclers-header h1 {
+            font-size: 24px;
+        }
+
+        .recyclers-header-icon {
+            font-size: 32px;
+        }
+
+        .recyclers-table-container {
+            padding: 15px;
+        }
+
+        .recyclers-table th,
+        .recyclers-table td {
+            padding: 12px 15px;
+            font-size: 12px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .profile-pic,
+        .no-image-avatar {
+            width: 40px;
+            height: 40px;
+        }
+
+        .stats-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="recyclers-header">
+    <div class="recyclers-header-left">
+        <div class="recyclers-header-icon">♻️</div>
+        <div>
+            <h1>Manage Recyclers</h1>
+            <p class="recyclers-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <span>Recyclers</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-recycle"></i>
+    <span>Total Recyclers: <strong>{{ recyclers|length }}</strong></span>
+</div>
+
+<!-- Scroll Hint -->
+<div class="scroll-hint">
+    <i class="fas fa-arrows-left-right"></i>
+    Scroll horizontally to view all columns
+</div>
+
+<!-- Table Container -->
+<div class="recyclers-table-container">
+    {% if recyclers %}
+    <table class="recyclers-table">
         <thead>
             <tr>
                 <th>Recycler ID</th>
-                <th>Profile Picture</th>
+                <th>Profile</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
@@ -20,29 +437,83 @@
         <tbody>
             {% for recycler in recyclers %}
             <tr>
-                <td>{{ recycler.recycler_id }}</td>
                 <td>
-                    {% if recycler.profile_pic %}
-                        <img src="{{ recycler.profile_pic.url }}" alt="Profile" class="img-thumbnail" width="50">
-                    {% else %}
-                        <span>No Image</span>
-                    {% endif %}
+                    <span class="recycler-id-badge">#{{ recycler.recycler_id }}</span>
                 </td>
-                <td>{{ recycler.name }}</td>
-                <td>{{ recycler.email }}</td>
-                <td>{{ recycler.phone }}</td>
-                <td>{{ recycler.aadhar_number }}</td>
-                <td>{{ recycler.panchayath_name }}</td>
                 <td>
-                    <a href="{% url 'edit_recycler' recycler.id %}" class="btn btn-warning btn-sm">Edit</a>
-                    <form method="POST" action="{% url 'delete_recycler' recycler.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                    </form>
+                    <div class="profile-pic-wrapper">
+                        {% if recycler.profile_pic %}
+                            <a href="{{ recycler.profile_pic.url }}" target="_blank">
+                                <img src="{{ recycler.profile_pic.url }}" alt="Profile" class="profile-pic">
+                            </a>
+                        {% else %}
+                            <div class="no-image-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="name-cell">
+                        {{ recycler.name }}
+                    </div>
+                </td>
+                <td>
+                    <span class="email-cell">
+                        <i class="fas fa-envelope"></i>
+                        {{ recycler.email }}
+                    </span>
+                </td>
+                <td>
+                    <span class="phone-cell">
+                        <i class="fas fa-phone"></i>
+                        {{ recycler.phone }}
+                    </span>
+                </td>
+                <td>
+                    <span class="aadhar-cell">{{ recycler.aadhar_number }}</span>
+                </td>
+                <td>
+                    <span class="panchayath-cell">
+                        <i class="fas fa-building"></i>
+                        {{ recycler.panchayath_name }}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'edit_recycler' recycler.id %}" class="btn-action btn-edit-recycler">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form method="POST" action="{% url 'delete_recycler' recycler.id %}" style="display: inline;" onsubmit="return confirmDelete(event);">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-action btn-delete-recycler">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">♻️</div>
+        <h3>No Recyclers Found</h3>
+        <p>Recycler registrations will appear here once added to the system.</p>
+    </div>
+    {% endif %}
 </div>
+
+<script>
+    function confirmDelete(event) {
+        if (!confirm("Are you sure you want to delete this recycler? This action cannot be undone.")) {
+            event.preventDefault();
+            return false;
+        }
+        return true;
+    }
+</script>
+
 {% endblock %}

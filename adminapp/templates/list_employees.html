@@ -1,57 +1,641 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">Employee List</h2>
+<style>
+    /* Employee List Page Styles */
+    .employees-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
 
-    {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} text-center">
-        {{ message }}
+    .employees-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .employees-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .employees-header-icon {
+        font-size: 40px;
+    }
+
+    .employees-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .employees-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .employees-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Add Employee Button */
+    .btn-add-employee {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-add-employee:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        color: #fff;
+    }
+
+    .btn-add-employee:active {
+        transform: translateY(0);
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+        flex-wrap: wrap;
+    }
+
+    .stats-bar i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #667eea;
+    }
+
+    /* Messages Styling */
+    .message-list {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 25px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .message-list li {
+        padding: 15px 18px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 4px solid;
+        animation: slideIn 0.3s ease;
+    }
+
+    .message-list li.success {
+        background-color: #d4edda;
+        color: #155724;
+        border-left-color: #28a745;
+    }
+
+    .message-list li.success::before {
+        content: '\f05d';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #28a745;
+    }
+
+    .message-list li.error,
+    .message-list li.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-left-color: #dc3545;
+    }
+
+    .message-list li.error::before,
+    .message-list li.danger::before {
+        content: '\f06a';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #dc3545;
+    }
+
+    .message-list li.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border-left-color: #ffc107;
+    }
+
+    .message-list li.warning::before {
+        content: '\f071';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #ffc107;
+    }
+
+    .message-list li.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border-left-color: #17a2b8;
+    }
+
+    .message-list li.info::before {
+        content: '\f05a';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #17a2b8;
+    }
+
+    /* Table Container */
+    .employees-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow-x: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .employees-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+    }
+
+    .employees-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .employees-table th {
+        padding: 16px 20px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .employees-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .employees-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .employees-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .employees-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .employees-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .employees-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Employee ID Badge */
+    .employee-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    /* Employee Name Cell */
+    .employee-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .employee-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .employee-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Contact Cells */
+    .email-cell {
+        color: #667eea;
+        font-size: 13px;
+    }
+
+    .email-cell i {
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    .phone-cell {
+        color: #555;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .phone-cell i {
+        color: #667eea;
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Wards Cell */
+    .wards-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .ward-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .ward-badge i {
+        font-size: 10px;
+    }
+
+    /* Employee Image */
+    .employee-image-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .employee-image {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+
+    .employee-image:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .no-image-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 18px;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .btn-edit-employee {
+        background: rgba(255, 193, 7, 0.15);
+        color: #d39e00;
+        border: 1px solid rgba(255, 193, 7, 0.4);
+    }
+
+    .btn-edit-employee:hover {
+        background: #ffc107;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(255, 193, 7, 0.3);
+    }
+
+    .btn-delete-employee {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-delete-employee:hover {
+        background: #dc3545;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .employees-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .employees-header h1 {
+            font-size: 24px;
+        }
+
+        .employees-header-icon {
+            font-size: 32px;
+        }
+
+        .btn-add-employee {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .employees-table-container {
+            padding: 15px;
+        }
+
+        .employees-table th,
+        .employees-table td {
+            padding: 12px 15px;
+            font-size: 12px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .employee-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .employee-image,
+        .no-image-avatar {
+            width: 40px;
+            height: 40px;
+        }
+
+        .stats-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="employees-header">
+    <div class="employees-header-left">
+        <div class="employees-header-icon">👥</div>
+        <div>
+            <h1>Employee List</h1>
+            <p class="employees-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <span>Employees</span>
+            </p>
+        </div>
     </div>
-    {% endfor %}
-    {% endif %}
+    <a href="{% url 'register_employee' %}" class="btn-add-employee">
+        <i class="fas fa-user-plus"></i> Register New Employee
+    </a>
+</div>
 
-    <table class="table table-bordered table-striped text-center">
-        <thead class="table-dark">
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-users"></i>
+    <span>Total Employees: <strong>{{ employees|length }}</strong></span>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<ul class="message-list">
+    {% for message in messages %}
+        {% if message.tags %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+        {% else %}
+            <li class="info">{{ message }}</li>
+        {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}
+
+<!-- Table Container -->
+<div class="employees-table-container">
+    {% if employees %}
+    <table class="employees-table">
+        <thead>
             <tr>
-                <th>ID</th>
+                <th>Employee ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Ward(s)</th>
-                <th>Employee Image</th>
+                <th>Image</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for employee in employees %}
             <tr>
-                <td>{{ employee.employee_id }}</td>
-                <td>{{ employee.name }}</td>
-                <td>{{ employee.email }}</td>
-                <td>{{ employee.phone }}</td>
                 <td>
-                    {% for ward in employee.ward.all %}
-                    Ward {{ ward.ward_number }} - {{ ward.location }}<br>
-                    {% endfor %}
+                    <span class="employee-id-badge">{{ employee.employee_id }}</span>
                 </td>
                 <td>
-                    {% if employee.image %}
-                    <img src="{{ employee.image.url }}" alt="Employee Image" width="50" height="50"
-                        class="rounded-circle">
-                    {% else %}
-                    No Image
-                    {% endif %}
+                    <div class="employee-name-cell">
+                        <div class="employee-avatar">
+                            {{ employee.name|slice:":1"|upper }}
+                        </div>
+                        <span class="employee-name">{{ employee.name }}</span>
+                    </div>
                 </td>
                 <td>
-                    <a href="{% url 'edit_employee' employee.id %}" class="btn btn-warning btn-sm">Edit</a>
-                    <button class="btn btn-danger btn-sm delete-btn" data-id="{{ employee.id }}">Delete</button>
+                    <span class="email-cell">
+                        <i class="fas fa-envelope"></i>
+                        {{ employee.email }}
+                    </span>
+                </td>
+                <td>
+                    <span class="phone-cell">
+                        <i class="fas fa-phone"></i>
+                        {{ employee.phone }}
+                    </span>
+                </td>
+                <td>
+                    <div class="wards-cell">
+                        {% for ward in employee.ward.all %}
+                        <span class="ward-badge">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Ward {{ ward.ward_number }}
+                        </span>
+                        {% empty %}
+                        <span style="color: #999; font-size: 12px;">No wards assigned</span>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td>
+                    <div class="employee-image-wrapper">
+                        {% if employee.image %}
+                        <a href="{{ employee.image.url }}" target="_blank">
+                            <img src="{{ employee.image.url }}" alt="Employee Image" class="employee-image">
+                        </a>
+                        {% else %}
+                        <div class="no-image-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'edit_employee' employee.id %}" class="btn-action btn-edit-employee">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <button class="btn-action btn-delete-employee delete-btn" data-id="{{ employee.id }}">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <h3>No Employees Found</h3>
+        <p>Get started by registering your first employee.</p>
+        <a href="{% url 'register_employee' %}" class="btn-add-employee">
+            <i class="fas fa-user-plus"></i> Register First Employee
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <script>

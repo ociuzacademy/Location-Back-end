@@ -1,12 +1,348 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="container">
-    <h2 class="text-center">Approved Driver Registrations</h2>
-    <table class="table table-bordered">
+<style>
+    /* Approved Drivers Page Styles */
+    .drivers-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .drivers-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .drivers-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .drivers-header-icon {
+        font-size: 40px;
+    }
+
+    .drivers-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .drivers-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .drivers-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #d4edda 0%, #f0fff4 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #28a745;
+        flex-wrap: wrap;
+    }
+
+    .stats-bar i {
+        color: #28a745;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #155724;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #155724;
+    }
+
+    /* Table Container */
+    .drivers-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow-x: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .drivers-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+    }
+
+    .drivers-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .drivers-table th {
+        padding: 16px 20px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .drivers-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .drivers-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .drivers-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .drivers-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .drivers-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .drivers-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Driver Name Cell */
+    .driver-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .driver-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .driver-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Email Cell */
+    .email-cell {
+        color: #667eea;
+        font-size: 13px;
+    }
+
+    .email-cell i {
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Phone Cell */
+    .phone-cell {
+        color: #555;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .phone-cell i {
+        color: #667eea;
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Place Cell */
+    .place-cell {
+        color: #555;
+        font-size: 13px;
+    }
+
+    .place-cell i {
+        color: #667eea;
+        margin-right: 6px;
+        font-size: 12px;
+    }
+
+    /* Aadhar Cell */
+    .aadhar-cell {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        color: #2c3e50;
+        letter-spacing: 1px;
+        background: #f3f4f6;
+        padding: 6px 12px;
+        border-radius: 6px;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .status-approved {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(32, 201, 151, 0.15) 100%);
+        color: #155724;
+        border: 1px solid rgba(40, 167, 69, 0.4);
+    }
+
+    .status-approved i {
+        color: #28a745;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .drivers-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .drivers-header h1 {
+            font-size: 24px;
+        }
+
+        .drivers-header-icon {
+            font-size: 32px;
+        }
+
+        .drivers-table-container {
+            padding: 15px;
+        }
+
+        .drivers-table th,
+        .drivers-table td {
+            padding: 12px 15px;
+            font-size: 12px;
+        }
+
+        .driver-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 13px;
+        }
+
+        .stats-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="drivers-header">
+    <div class="drivers-header-left">
+        <div class="drivers-header-icon">✅</div>
+        <div>
+            <h1>Approved Driver Registrations</h1>
+            <p class="drivers-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <a href="#">Drivers</a> / 
+                <span>Approved</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-check-circle"></i>
+    <span>Approved Drivers: <strong>{{ drivers|length }}</strong></span>
+    <span style="color: #ccc; margin: 0 8px;">|</span>
+    <i class="fas fa-info-circle"></i>
+    <span>These drivers are active and available for allocation</span>
+</div>
+
+<!-- Table Container -->
+<div class="drivers-table-container">
+    {% if drivers %}
+    <table class="drivers-table">
         <thead>
             <tr>
-                <th>Name</th>
+                <th>Driver</th>
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Place</th>
@@ -17,21 +353,53 @@
         <tbody>
             {% for driver in drivers %}
             <tr>
-                <td>{{ driver.name }}</td>
-                <td>{{ driver.email }}</td>
-                <td>{{ driver.phone }}</td>
-                <td>{{ driver.place }}</td>
-
-                <td>{{ driver.aadhar_number }}</td>
-
-                <td class="text-success">{{ driver.status }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center">No approved drivers found.</td>
+                <td>
+                    <div class="driver-name-cell">
+                        <div class="driver-avatar">
+                            {{ driver.name|slice:":1"|upper }}
+                        </div>
+                        <span class="driver-name">{{ driver.name }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="email-cell">
+                        <i class="fas fa-envelope"></i>
+                        {{ driver.email }}
+                    </span>
+                </td>
+                <td>
+                    <span class="phone-cell">
+                        <i class="fas fa-phone"></i>
+                        {{ driver.phone }}
+                    </span>
+                </td>
+                <td>
+                    <span class="place-cell">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ driver.place }}
+                    </span>
+                </td>
+                <td>
+                    <span class="aadhar-cell">{{ driver.aadhar_number }}</span>
+                </td>
+                <td>
+                    <span class="status-badge status-approved">
+                        <i class="fas fa-check-circle"></i>
+                        {{ driver.status }}
+                    </span>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">✅</div>
+        <h3>No Approved Drivers</h3>
+        <p>Approved driver registrations will appear here.</p>
+    </div>
+    {% endif %}
 </div>
+
 {% endblock %}

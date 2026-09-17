@@ -1,37 +1,385 @@
-<!-- list_wards.html -->
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="main-content">
-    <h2>List of Wards</h2>
-    <div class="container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Ward Number</th>
-                    <th>Location</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ward in wards %}
-                <tr>
-                    <td>{{ ward.ward_number }}</td>
-                    <td>{{ ward.location }}</td>
-                    <td>
-                        <a href="{% url 'edit_ward' ward.id %}">Edit</a>
-                        <a href="{% url 'delete_ward' ward.id %}" class="delete-link"
-                            onclick="confirmDelete(event)">Delete</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3">No wards available.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<style>
+    /* List Wards Page Styles */
+    .wards-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .wards-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .wards-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .wards-header-icon {
+        font-size: 40px;
+    }
+
+    .wards-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .wards-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .wards-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Add Ward Button */
+    .btn-add-ward {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-add-ward:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        color: #fff;
+    }
+
+    .btn-add-ward:active {
+        transform: translateY(0);
+    }
+
+    /* Table Container */
+    .wards-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow: hidden;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .wards-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+    }
+
+    .wards-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .wards-table th {
+        padding: 16px 20px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+
+    .wards-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .wards-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .wards-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 15px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .wards-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .wards-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .wards-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Ward Number Badge */
+    .ward-number-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-edit {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-edit:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-delete {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+    }
+
+    .stats-bar i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #667eea;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .wards-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .wards-header h1 {
+            font-size: 24px;
+        }
+
+        .wards-header-icon {
+            font-size: 32px;
+        }
+
+        .btn-add-ward {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .wards-table-container {
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .wards-table th,
+        .wards-table td {
+            padding: 12px 15px;
+            font-size: 13px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .ward-number-badge {
+            min-width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="wards-header">
+    <div class="wards-header-left">
+        <div class="wards-header-icon">📍</div>
+        <div>
+            <h1>List of Wards</h1>
+            <p class="wards-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <span>Wards</span>
+            </p>
+        </div>
     </div>
+    <a href="{% url 'add_ward' %}" class="btn-add-ward">
+        <i class="fas fa-plus-circle"></i> Add New Ward
+    </a>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-map-marker-alt"></i>
+    <span>Total Wards: <strong>{{ wards|length }}</strong></span>
+</div>
+
+<!-- Table Container -->
+<div class="wards-table-container">
+    {% if wards %}
+    <table class="wards-table">
+        <thead>
+            <tr>
+                <th>Ward Number</th>
+                <th>Location (From-To)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ward in wards %}
+            <tr>
+                <td>
+                    <span class="ward-number-badge">{{ ward.ward_number }}</span>
+                </td>
+                <td>
+                    <i class="fas fa-map-pin" style="color: #667eea; margin-right: 8px;"></i>
+                    {{ ward.location }}
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'edit_ward' ward.id %}" class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'delete_ward' ward.id %}" class="btn-action btn-delete"
+                            onclick="confirmDelete(event)">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📍</div>
+        <h3>No Wards Available</h3>
+        <p>Get started by adding your first ward to the system.</p>
+        <a href="{% url 'add_ward' %}" class="btn-add-ward">
+            <i class="fas fa-plus-circle"></i> Add First Ward
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <script>
@@ -41,4 +389,5 @@
         }
     }
 </script>
+
 {% endblock %}

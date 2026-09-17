@@ -1,29 +1,571 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<header>
-    <h1>Add Category</h1>
-</header>
-<div class="content">
+<style>
+    /* Add Category Page Styles */
+    .category-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .category-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .category-header-icon {
+        font-size: 40px;
+    }
+
+    .category-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .category-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .category-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Form Container */
+    .category-form-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Form Styling */
+    #addCategoryForm {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-group label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-group label::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="file"] {
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group input[type="file"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group input[type="text"]::placeholder {
+        color: #999;
+    }
+
+    /* File Input Custom Styling */
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: block;
+    }
+
+    .form-group input[type="file"] {
+        display: none;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 40px;
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .file-input-label:hover {
+        border-color: #764ba2;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+
+    .file-input-label i {
+        font-size: 32px;
+        color: #667eea;
+    }
+
+    .file-input-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .file-input-text strong {
+        color: #2c3e50;
+        font-size: 15px;
+    }
+
+    .file-input-text small {
+        color: #999;
+        font-size: 13px;
+    }
+
+    #categoryImage:focus + .file-input-label {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    }
+
+    /* File Name Display */
+    .file-name-display {
+        display: none;
+        padding: 12px 16px;
+        background: #f0f4ff;
+        border-radius: 8px;
+        color: #667eea;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: -10px;
+    }
+
+    .file-name-display.show {
+        display: flex;
+    }
+
+    .file-name-display i {
+        font-size: 18px;
+    }
+
+    /* Submit Button */
+    .form-submit-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .form-group button,
+    .submit-btn {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    #addCategoryForm input[type="submit"] {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    #addCategoryForm input[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    #addCategoryForm input[type="submit"]:active {
+        transform: translateY(0);
+    }
+
+    /* Messages Styling */
+    .message-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .message-list li {
+        padding: 15px 18px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 4px solid;
+    }
+
+    /* Message type styling */
+    .message-list li.success {
+        background-color: #d4edda;
+        color: #155724;
+        border-left-color: #28a745;
+    }
+
+    .message-list li.success::before {
+        content: '\f05d';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #28a745;
+    }
+
+    .message-list li.error,
+    .message-list li.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-left-color: #dc3545;
+    }
+
+    .message-list li.error::before,
+    .message-list li.danger::before {
+        content: '\f06a';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #dc3545;
+    }
+
+    .message-list li.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border-left-color: #ffc107;
+    }
+
+    .message-list li.warning::before {
+        content: '\f071';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: #ffc107;
+    }
+
+    /* Info Box */
+    .info-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-left: 4px solid #667eea;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+
+    .info-box-title {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-box-title i {
+        font-size: 16px;
+    }
+
+    .info-box-text {
+        color: #555;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* Cancel Button */
+    .btn-cancel {
+        padding: 10px 24px;
+        background: #f0f2f5;
+        color: #2c3e50;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-cancel:hover {
+        background: #e8eaed;
+        border-color: #bbb;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .category-form-container {
+            padding: 25px;
+            margin: 20px;
+        }
+
+        .category-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .category-header h1 {
+            font-size: 24px;
+        }
+
+        .category-header-icon {
+            font-size: 32px;
+        }
+
+        #addCategoryForm {
+            gap: 20px;
+        }
+
+        .form-group {
+            gap: 8px;
+        }
+
+        .file-input-label {
+            padding: 30px 20px;
+            flex-direction: column;
+        }
+
+        .form-submit-group {
+            flex-direction: column;
+        }
+
+        .submit-btn {
+            width: 100%;
+        }
+    }
+
+    /* Loading State */
+    .form-group input[type="submit"]:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .form-group input[type="submit"]:disabled:hover {
+        box-shadow: none;
+    }
+
+    /* Animation for form elements */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .category-form-container {
+        animation: slideIn 0.3s ease;
+    }
+
+    .message-list li {
+        animation: slideIn 0.3s ease;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="category-header">
+    <div class="category-header-icon">📂</div>
+    <div>
+        <h1>Add New Category</h1>
+        <p class="category-breadcrumb">
+            <a href="{% url 'admin_index' %}">Dashboard</a> / 
+            <a href="{% url 'list_categories' %}">Categories</a> / 
+            <span>Add New</span>
+        </p>
+    </div>
+</div>
+
+<div class="category-form-container">
+    <!-- Info Box -->
+    <div class="info-box">
+        <div class="info-box-title">
+            <i class="fas fa-circle-info"></i>
+            Category Information
+        </div>
+        <div class="info-box-text">
+            Create a new waste category to organize and manage different types of garbage. Each category should have a clear name and representative image for easy identification.
+        </div>
+    </div>
+
+    <!-- Add Category Form -->
     <form id="addCategoryForm" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <label for="categoryName">Category Name:</label>
-        <input type="text" id="categoryName" name="categoryName" placeholder="Enter category name" required><br><br>
+        <!-- Category Name Field -->
+        <div class="form-group">
+            <label for="categoryName">
+                <i class="fas fa-tag"></i> Category Name
+            </label>
+            <input 
+                type="text" 
+                id="categoryName" 
+                name="categoryName" 
+                placeholder="e.g., Organic Waste, Plastic, Metal" 
+                required
+            >
+        </div>
 
-        <label for="categoryImage">Category Image:</label>
-        <input type="file" id="categoryImage" name="categoryImage" accept="image/*" required><br><br>
+        <!-- Category Image Field -->
+        <div class="form-group">
+            <label for="categoryImage">
+                <i class="fas fa-image"></i> Category Image
+            </label>
+            <div class="file-input-wrapper">
+                <input 
+                    type="file" 
+                    id="categoryImage" 
+                    name="categoryImage" 
+                    accept="image/*" 
+                    required
+                >
+                <label for="categoryImage" class="file-input-label">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <div class="file-input-text">
+                        <strong>Click to upload or drag and drop</strong>
+                        <small>PNG, JPG, GIF up to 10MB</small>
+                    </div>
+                </label>
+            </div>
+            <div class="file-name-display" id="fileNameDisplay">
+                <i class="fas fa-check-circle"></i>
+                <span id="selectedFileName"></span>
+            </div>
+        </div>
 
-
+        <!-- Submit Button -->
         <input type="submit" value="Add Category">
     </form>
 
+    <!-- Messages -->
     {% if messages %}
     <ul class="message-list">
         {% for message in messages %}
-        <li>{{ message }}</li>
+            {% if message.tags %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% else %}
+                <li class="info">{{ message }}</li>
+            {% endif %}
         {% endfor %}
     </ul>
     {% endif %}
 </div>
+
+<script>
+    // File input handling
+    const categoryImageInput = document.getElementById('categoryImage');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const fileInputLabel = document.querySelector('.file-input-label');
+
+    // Handle file selection
+    categoryImageInput.addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name;
+        if (fileName) {
+            selectedFileName.textContent = fileName;
+            fileNameDisplay.classList.add('show');
+            fileInputLabel.style.opacity = '0.6';
+        }
+    });
+
+    // Handle drag and drop
+    fileInputLabel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileInputLabel.style.borderColor = '#764ba2';
+        fileInputLabel.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%)';
+    });
+
+    fileInputLabel.addEventListener('dragleave', () => {
+        fileInputLabel.style.borderColor = '#667eea';
+        fileInputLabel.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)';
+    });
+
+    fileInputLabel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileInputLabel.style.borderColor = '#667eea';
+        fileInputLabel.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            categoryImageInput.files = files;
+            const event = new Event('change', { bubbles: true });
+            categoryImageInput.dispatchEvent(event);
+        }
+    });
+
+    // Form validation
+    document.getElementById('addCategoryForm').addEventListener('submit', function(e) {
+        const categoryName = document.getElementById('categoryName').value.trim();
+        const categoryImage = document.getElementById('categoryImage').files;
+
+        if (!categoryName) {
+            e.preventDefault();
+            alert('Please enter a category name');
+            return;
+        }
+
+        if (categoryImage.length === 0) {
+            e.preventDefault();
+            alert('Please select an image for the category');
+            return;
+        }
+
+        // Check file size (max 10MB)
+        if (categoryImage[0].size > 10 * 1024 * 1024) {
+            e.preventDefault();
+            alert('Image size must be less than 10MB');
+            return;
+        }
+    });
+</script>
+
 {% endblock %}

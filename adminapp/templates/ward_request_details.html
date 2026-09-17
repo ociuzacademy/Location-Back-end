@@ -1,55 +1,753 @@
 {% extends 'admin_index.html' %}
+
 {% block content %}
-<h2>Waste Requests for Ward {{ ward.ward_number }} - {{ ward.location }}</h2>
+<style>
+    /* Ward Waste Requests Page Styles */
+    .requests-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
 
-{% if waste_submissions %}
-<table border="1">
-    <tr>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Place</th>
-        <th>Address</th>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Waste Categories</th>
-        <th>Kilograms</th>
-        <th>Total Amount</th>
-        <th>Status</th>
-    </tr>
-    {% for submission in waste_submissions %}
-    <tr {% if submission.status == "completed" %} 
-        style="background-color: rgba(11, 169, 11, 0.916); color: white;" 
-    {% elif submission.status == "pending" or submission.status == "incomplete" or submission.status == "rejected" %}
-        style="background-color: rgb(242, 37, 37); color: white;" 
-    {% endif %}>
+    .requests-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
+    .requests-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
 
-        <td>{{ submission.user.name }}</td>
-        <td>{{ submission.user.phone }}</td>
-        <td>{{ submission.user.place }}</td>
-        <td>{{ submission.user.address }}</td>
-        <td>{{ submission.date }}</td>
-        <td>{{ submission.time }}</td>
-        <td>
-            {% for category in submission.category_list %}
-            {{ category }}<br>
+    .requests-header-icon {
+        font-size: 40px;
+    }
+
+    .requests-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .requests-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .requests-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Ward Info Card */
+    .ward-info-card {
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-left: 4px solid #667eea;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .ward-info-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 26px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .ward-info-details {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex-grow: 1;
+    }
+
+    .ward-info-details h3 {
+        color: #2c3e50;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .ward-info-details h3 span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3px 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .ward-info-details p {
+        color: #555;
+        font-size: 14px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ward-info-details p i {
+        color: #667eea;
+        font-size: 14px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+        flex-wrap: wrap;
+    }
+
+    .stats-bar i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #667eea;
+    }
+
+    .stats-bar .divider {
+        color: #ddd;
+        margin: 0 8px;
+    }
+
+    /* Legend */
+    .legend {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 12px 20px;
+        background: #f9fafb;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+
+    .legend-color.completed {
+        background: rgba(40, 167, 69, 0.9);
+    }
+
+    .legend-color.pending {
+        background: rgba(220, 53, 69, 0.9);
+    }
+
+    /* Table Container */
+    .requests-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow-x: auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .requests-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        min-width: 1200px;
+    }
+
+    .requests-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .requests-table th {
+        padding: 14px 16px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .requests-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .requests-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .requests-table td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 13px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .requests-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .requests-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Row Status Styling */
+    .requests-table tbody tr.status-completed {
+        background-color: rgba(40, 167, 69, 0.08);
+        border-left: 4px solid #28a745;
+    }
+
+    .requests-table tbody tr.status-completed:hover {
+        background-color: rgba(40, 167, 69, 0.15);
+    }
+
+    .requests-table tbody tr.status-pending,
+    .requests-table tbody tr.status-incomplete,
+    .requests-table tbody tr.status-rejected {
+        background-color: rgba(220, 53, 69, 0.08);
+        border-left: 4px solid #dc3545;
+    }
+
+    .requests-table tbody tr.status-pending:hover,
+    .requests-table tbody tr.status-incomplete:hover,
+    .requests-table tbody tr.status-rejected:hover {
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+
+    /* User Cell */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Contact Cells */
+    .phone-cell {
+        color: #555;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .phone-cell i {
+        color: #667eea;
+        margin-right: 5px;
+        font-size: 11px;
+    }
+
+    .place-cell {
+        color: #555;
+        font-size: 12px;
+    }
+
+    .place-cell i {
+        color: #667eea;
+        margin-right: 5px;
+        font-size: 11px;
+    }
+
+    .address-cell {
+        color: #666;
+        font-size: 12px;
+        max-width: 180px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.4;
+    }
+
+    /* Date/Time Cells */
+    .date-cell {
+        color: #666;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .date-cell i {
+        color: #667eea;
+        margin-right: 5px;
+        font-size: 11px;
+    }
+
+    /* Categories Cell */
+    .categories-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Kilo Cell */
+    .kilo-cell {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .kilo-cell.not-updated {
+        color: #999;
+        font-style: italic;
+        font-weight: 400;
+        font-size: 12px;
+    }
+
+    /* Amount Cell */
+    .amount-cell {
+        font-weight: 700;
+        color: #28a745;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .status-badge.completed {
+        background: rgba(40, 167, 69, 0.15);
+        color: #155724;
+        border: 1px solid rgba(40, 167, 69, 0.4);
+    }
+
+    .status-badge.completed i {
+        color: #28a745;
+    }
+
+    .status-badge.pending {
+        background: rgba(255, 193, 7, 0.15);
+        color: #856404;
+        border: 1px solid rgba(255, 193, 7, 0.4);
+    }
+
+    .status-badge.pending i {
+        color: #ffc107;
+    }
+
+    .status-badge.rejected {
+        background: rgba(220, 53, 69, 0.15);
+        color: #721c24;
+        border: 1px solid rgba(220, 53, 69, 0.4);
+    }
+
+    .status-badge.rejected i {
+        color: #dc3545;
+    }
+
+    .status-badge.incomplete {
+        background: rgba(255, 152, 0, 0.15);
+        color: #856404;
+        border: 1px solid rgba(255, 152, 0, 0.4);
+    }
+
+    .status-badge.incomplete i {
+        color: #ff9800;
+    }
+
+    /* Back Button */
+    .btn-back {
+        padding: 12px 24px;
+        background: #f0f2f5;
+        color: #2c3e50;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 25px;
+    }
+
+    .btn-back:hover {
+        background: #e8eaed;
+        border-color: #bbb;
+        color: #2c3e50;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* Scroll Hint */
+    .scroll-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #f0f4ff;
+        border-radius: 8px;
+        color: #667eea;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .requests-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .requests-header h1 {
+            font-size: 22px;
+        }
+
+        .requests-header-icon {
+            font-size: 32px;
+        }
+
+        .ward-info-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .requests-table-container {
+            padding: 15px;
+        }
+
+        .requests-table th,
+        .requests-table td {
+            padding: 10px 12px;
+            font-size: 12px;
+        }
+
+        .stats-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .stats-bar .divider {
+            display: none;
+        }
+
+        .legend {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="requests-header">
+    <div class="requests-header-left">
+        <div class="requests-header-icon">📦</div>
+        <div>
+            <h1>Waste Requests</h1>
+            <p class="requests-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <a href="{% url 'ward_requests' %}">Ward Requests</a> / 
+                <span>Ward {{ ward.ward_number }}</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Ward Info Card -->
+<div class="ward-info-card">
+    <div class="ward-info-icon">
+        <i class="fas fa-map-marker-alt"></i>
+    </div>
+    <div class="ward-info-details">
+        <h3>
+            Ward <span>{{ ward.ward_number }}</span>
+        </h3>
+        <p>
+            <i class="fas fa-location-dot"></i>
+            <strong>Location:</strong> {{ ward.location }}
+        </p>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-clipboard-list"></i>
+    <span>Total Requests: <strong>{{ waste_submissions|length }}</strong></span>
+    <span class="divider">|</span>
+    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+    <span>Completed: <strong style="color: #28a745;">{{ waste_submissions|length }}</strong></span>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+    <div class="legend-item">
+        <div class="legend-color completed"></div>
+        <span>Completed</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color pending"></div>
+        <span>Pending / Incomplete / Rejected</span>
+    </div>
+</div>
+
+<!-- Scroll Hint -->
+<div class="scroll-hint">
+    <i class="fas fa-arrows-left-right"></i>
+    Scroll horizontally to view all columns
+</div>
+
+<!-- Table Container -->
+<div class="requests-table-container">
+    {% if waste_submissions %}
+    <table class="requests-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Place</th>
+                <th>Address</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Waste Categories</th>
+                <th>Kilograms</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for submission in waste_submissions %}
+            <tr class="{% if submission.status == 'completed' %}status-completed{% elif submission.status == 'pending' or submission.status == 'incomplete' or submission.status == 'rejected' %}status-pending{% endif %}">
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar">
+                            {{ submission.user.name|slice:":1"|upper }}
+                        </div>
+                        <span class="user-name">{{ submission.user.name }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="phone-cell">
+                        <i class="fas fa-phone"></i>
+                        {{ submission.user.phone }}
+                    </span>
+                </td>
+                <td>
+                    <span class="place-cell">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ submission.user.place }}
+                    </span>
+                </td>
+                <td>
+                    <div class="address-cell" title="{{ submission.user.address }}">
+                        {{ submission.user.address }}
+                    </div>
+                </td>
+                <td>
+                    <span class="date-cell">
+                        <i class="fas fa-calendar"></i>
+                        {{ submission.date }}
+                    </span>
+                </td>
+                <td>
+                    <span class="date-cell">
+                        <i class="fas fa-clock"></i>
+                        {{ submission.time }}
+                    </span>
+                </td>
+                <td>
+                    <div class="categories-cell">
+                        {% for category in submission.category_list %}
+                        <span class="category-badge">{{ category }}</span>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td>
+                    {% if submission.kilo %}
+                    <span class="kilo-cell">{{ submission.kilo }} kg</span>
+                    {% else %}
+                    <span class="kilo-cell not-updated">Not updated</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="amount-cell">₹{{ submission.total_price }}</span>
+                </td>
+                <td>
+                    {% if submission.status == "completed" %}
+                    <span class="status-badge completed">
+                        <i class="fas fa-check-circle"></i>
+                        {{ submission.get_status_display }}
+                    </span>
+                    {% elif submission.status == "pending" %}
+                    <span class="status-badge pending">
+                        <i class="fas fa-clock"></i>
+                        {{ submission.get_status_display }}
+                    </span>
+                    {% elif submission.status == "rejected" %}
+                    <span class="status-badge rejected">
+                        <i class="fas fa-times-circle"></i>
+                        {{ submission.get_status_display }}
+                    </span>
+                    {% elif submission.status == "incomplete" %}
+                    <span class="status-badge incomplete">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ submission.get_status_display }}
+                    </span>
+                    {% else %}
+                    <span class="status-badge pending">
+                        {{ submission.get_status_display }}
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
             {% endfor %}
-        </td>
-        <td>
-            {% if submission.kilo %}
-            {{ submission.kilo }} kg
-            {% else %}
-            Not updated
-            {% endif %}
-        </td>
-        <td>{{ submission.total_price }}</td>
-        <td>{{ submission.get_status_display }}</td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>No requests found for this ward.</p>
+        </tbody>
+    </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📦</div>
+        <h3>No Requests Found</h3>
+        <p>There are no waste requests for this ward yet.</p>
+        <a href="{% url 'ward_requests' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Wards
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Back Button -->
+{% if waste_submissions %}
+<div style="margin-top: 25px;">
+    <a href="{% url 'ward_requests' %}" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back to Wards
+    </a>
+</div>
 {% endif %}
 
-<a href="{% url 'ward_requests' %}">Back to Wards</a>
 {% endblock %}

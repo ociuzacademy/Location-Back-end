@@ -1,28 +1,720 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<div class="main-content">
-    <div class="container">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* Edit Category Page Styles */
+    .edit-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .edit-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .edit-header-icon {
+        font-size: 40px;
+    }
+
+    .edit-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .edit-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .edit-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Form Container */
+    .edit-form-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    /* Form Styling */
+    #editCategoryForm {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .form-section {
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 30px;
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+    }
+
+    .form-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-section-title i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-group label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-group label::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="file"] {
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group input[type="number"]:focus,
+    .form-group input[type="file"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group input[type="text"]::placeholder,
+    .form-group input[type="number"]::placeholder {
+        color: #999;
+    }
+
+    /* Current Image Section */
+    .current-image-section {
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .current-image-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #667eea;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+
+    .current-image-display {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .current-image-wrapper {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .current-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .current-image-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .current-image-info p {
+        margin: 0;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .current-image-info strong {
+        color: #2c3e50;
+        font-size: 15px;
+    }
+
+    /* File Input Custom Styling */
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: block;
+    }
+
+    .form-group input[type="file"] {
+        display: none;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 30px;
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .file-input-label:hover {
+        border-color: #764ba2;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+
+    .file-input-label i {
+        font-size: 28px;
+        color: #667eea;
+    }
+
+    .file-input-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .file-input-text strong {
+        color: #2c3e50;
+        font-size: 14px;
+    }
+
+    .file-input-text small {
+        color: #999;
+        font-size: 12px;
+    }
+
+    /* File Name Display */
+    .file-name-display {
+        display: none;
+        padding: 12px 16px;
+        background: #f0f4ff;
+        border-radius: 8px;
+        color: #667eea;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: -8px;
+    }
+
+    .file-name-display.show {
+        display: flex;
+    }
+
+    .file-name-display i {
+        font-size: 16px;
+    }
+
+    /* New Image Preview */
+    .new-image-preview {
+        display: none;
+        margin-top: 15px;
+    }
+
+    .new-image-preview.show {
+        display: block;
+    }
+
+    .new-image-preview-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    .new-image-wrapper {
+        width: 150px;
+        height: 150px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .new-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .submit-btn,
+    .cancel-btn {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        flex: 1;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .cancel-btn {
+        background: #f0f2f5;
+        color: #2c3e50;
+        border: 1px solid #ddd;
+        flex: 1;
+    }
+
+    .cancel-btn:hover {
+        background: #e8eaed;
+        border-color: #bbb;
+    }
+
+    .cancel-btn a {
+        color: inherit;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+    }
+
+    #editCategoryForm button {
+        width: 100%;
+    }
+
+    /* Info Box */
+    .info-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-left: 4px solid #667eea;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+
+    .info-box-title {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-box-title i {
+        font-size: 16px;
+    }
+
+    .info-box-text {
+        color: #555;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* Messages */
+    .message-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .message-list li {
+        padding: 15px 18px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 4px solid;
+    }
+
+    .message-list li.success {
+        background-color: #d4edda;
+        color: #155724;
+        border-left-color: #28a745;
+    }
+
+    .message-list li.error,
+    .message-list li.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-left-color: #dc3545;
+    }
+
+    .message-list li.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border-left-color: #ffc107;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .edit-form-container {
+            padding: 25px;
+            margin: 20px;
+        }
+
+        .edit-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .edit-header h1 {
+            font-size: 24px;
+        }
+
+        .edit-header-icon {
+            font-size: 32px;
+        }
+
+        #editCategoryForm {
+            gap: 25px;
+        }
+
+        .form-group {
+            gap: 8px;
+        }
+
+        .file-input-label {
+            padding: 25px 15px;
+            flex-direction: column;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .submit-btn,
+        .cancel-btn {
+            flex: 1;
+            width: 100%;
+        }
+
+        .current-image-display {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+    /* Loading State */
+    button[type="submit"]:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    button[type="submit"]:disabled:hover {
+        box-shadow: none;
+        transform: none;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .edit-form-container {
+        animation: slideIn 0.3s ease;
+    }
+</style>
+
+<!-- Header -->
+<div class="edit-header">
+    <div class="edit-header-icon">✏️</div>
+    <div>
         <h1>Edit Category</h1>
-        <form id="editCategoryForm" method="POST" action="{% url 'edit_category' category.id %}"
-            enctype="multipart/form-data">
-            {% csrf_token %}
-
-            <label for="categoryName">Category Name:</label>
-            <input type="text" id="categoryName" name="categoryName" value="{{ category.name }}" required><br><br>
-
-            <label for="categoryImage">Current Image:</label>
-            <img src="{{ category.image.url }}" alt="{{ category.name }}" style="width: 100px; height: auto;"><br><br>
-
-            <label for="categoryImage">Upload New Image:</label>
-            <input type="file" id="categoryImage" name="categoryImage"><br><br>
-
-            <label for="categoryPrice">Category Price:</label>
-            <input type="number" id="categoryPrice" name="categoryPrice" value="{{ category.price }}" step="0.01"
-                required><br><br>
-
-            <button type="submit" class="button save-button">Save Changes</button>
-        </form>
+        <p class="edit-breadcrumb">
+            <a href="{% url 'admin_index' %}">Dashboard</a> / 
+            <a href="{% url 'list_categories' %}">Categories</a> / 
+            <span>{{ category.name }}</span>
+        </p>
     </div>
 </div>
+
+<!-- Form Container -->
+<div class="edit-form-container">
+    <!-- Info Box -->
+    <div class="info-box">
+        <div class="info-box-title">
+            <i class="fas fa-circle-info"></i>
+            Update Category Details
+        </div>
+        <div class="info-box-text">
+            Modify the category information below. You can update the name, price, and image. All changes will be saved to the system.
+        </div>
+    </div>
+
+    <!-- Edit Category Form -->
+    <form id="editCategoryForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Basic Information Section -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-info-circle"></i>
+                Basic Information
+            </div>
+
+            <!-- Category Name -->
+            <div class="form-group">
+                <label for="categoryName">Category Name</label>
+                <input 
+                    type="text" 
+                    id="categoryName" 
+                    name="categoryName" 
+                    value="{{ category.name }}" 
+                    placeholder="Enter category name"
+                    required
+                >
+            </div>
+
+            <!-- Category Price -->
+            <div class="form-group">
+                <label for="categoryPrice">Category Price</label>
+                <input 
+                    type="number" 
+                    id="categoryPrice" 
+                    name="categoryPrice" 
+                    value="{{ category.price }}" 
+                    step="0.01"
+                    placeholder="Enter price"
+                    required
+                >
+            </div>
+        </div>
+
+        <!-- Image Section -->
+        <div class="form-section">
+            <div class="form-section-title">
+                <i class="fas fa-image"></i>
+                Category Image
+            </div>
+
+            <!-- Current Image -->
+            <div class="current-image-section">
+                <div class="current-image-label">Current Image</div>
+                <div class="current-image-display">
+                    <div class="current-image-wrapper">
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}">
+                    </div>
+                    <div class="current-image-info">
+                        <strong>{{ category.name }}</strong>
+                        <p>Uploaded image for this category</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload New Image -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="categoryImage">Upload New Image (Optional)</label>
+                <div class="file-input-wrapper">
+                    <input 
+                        type="file" 
+                        id="categoryImage" 
+                        name="categoryImage" 
+                        accept="image/*"
+                    >
+                    <label for="categoryImage" class="file-input-label">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <div class="file-input-text">
+                            <strong>Click to upload or drag and drop</strong>
+                            <small>PNG, JPG, GIF up to 10MB</small>
+                        </div>
+                    </label>
+                </div>
+                <div class="file-name-display" id="fileNameDisplay">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="selectedFileName"></span>
+                </div>
+                <div class="new-image-preview" id="newImagePreview">
+                    <div class="new-image-preview-label">New Image Preview</div>
+                    <div class="new-image-wrapper">
+                        <img id="previewImage" alt="Preview">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{% url 'list_categories' %}" class="cancel-btn">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+
+    <!-- Messages -->
+    {% if messages %}
+    <ul class="message-list">
+        {% for message in messages %}
+            {% if message.tags %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% else %}
+                <li class="info">{{ message }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+
+<script>
+    // File input handling
+    const categoryImageInput = document.getElementById('categoryImage');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const newImagePreview = document.getElementById('newImagePreview');
+    const previewImage = document.getElementById('previewImage');
+    const fileInputLabel = document.querySelector('.file-input-label');
+
+    // Handle file selection
+    categoryImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            selectedFileName.textContent = file.name;
+            fileNameDisplay.classList.add('show');
+            fileInputLabel.style.opacity = '0.6';
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                newImagePreview.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Handle drag and drop
+    fileInputLabel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileInputLabel.style.borderColor = '#764ba2';
+        fileInputLabel.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%)';
+    });
+
+    fileInputLabel.addEventListener('dragleave', () => {
+        fileInputLabel.style.borderColor = '#667eea';
+        fileInputLabel.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)';
+    });
+
+    fileInputLabel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileInputLabel.style.borderColor = '#667eea';
+        fileInputLabel.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            categoryImageInput.files = files;
+            const event = new Event('change', { bubbles: true });
+            categoryImageInput.dispatchEvent(event);
+        }
+    });
+
+    // Form validation
+    document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+        const categoryName = document.getElementById('categoryName').value.trim();
+        const categoryPrice = document.getElementById('categoryPrice').value;
+
+        if (!categoryName) {
+            e.preventDefault();
+            alert('Please enter a category name');
+            return;
+        }
+
+        if (!categoryPrice || categoryPrice <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid price');
+            return;
+        }
+
+        // Check file size if new file is selected
+        const categoryImage = document.getElementById('categoryImage');
+        if (categoryImage.files.length > 0) {
+            if (categoryImage.files[0].size > 10 * 1024 * 1024) {
+                e.preventDefault();
+                alert('Image size must be less than 10MB');
+                return;
+            }
+        }
+    });
+</script>
+
 {% endblock %}

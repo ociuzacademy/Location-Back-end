@@ -1,26 +1,363 @@
-<!-- add_ward.html -->
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<header>
-    <h1>Add Ward</h1>
-</header>
-<div class="content">
-    <div class="container">
-        <h2>Add Ward</h2>
-        {% if error_message %}
-        <p class="error">{{ error_message }}</p>
-        {% endif %}
-        <form method="POST">
-            {% csrf_token %}
-            <label for="ward_number">Ward Number:</label>
-            <input type="number" name="ward_number" id="ward_number" required><br><br>
+<style>
+    /* Add Ward Page Styles */
+    .ward-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
 
-            <label for="location">Location (From-To):</label>
-            <input type="text" name="location" id="location" required><br><br>
+    .ward-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
 
-            <button type="submit">Add Ward</button>
-        </form>
+    .ward-header-icon {
+        font-size: 40px;
+    }
+
+    .ward-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .ward-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .ward-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Form Container */
+    .ward-form-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        max-width: 600px;
+        margin: 0 auto;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Form Styling */
+    #addWardForm {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-group label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-group label::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+
+    .form-group input[type="number"],
+    .form-group input[type="text"] {
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .form-group input[type="number"]:focus,
+    .form-group input[type="text"]:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group input::placeholder {
+        color: #999;
+    }
+
+    /* Remove spinner arrows from number input */
+    .form-group input[type="number"]::-webkit-outer-spin-button,
+    .form-group input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .form-group input[type="number"] {
+        appearance: textfield;
+        -moz-appearance: textfield;
+    }
+
+    /* Submit Button */
+    .form-submit-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    #addWardForm input[type="submit"],
+    .submit-btn {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+    }
+
+    #addWardForm input[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    #addWardForm input[type="submit"]:active {
+        transform: translateY(0);
+    }
+
+    /* Error Message */
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px 18px;
+        border-radius: 8px;
+        border-left: 4px solid #dc3545;
+        font-weight: 500;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .error-message i {
+        font-size: 18px;
+        color: #dc3545;
+    }
+
+    /* Info Box */
+    .info-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-left: 4px solid #667eea;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+
+    .info-box-title {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-box-title i {
+        font-size: 16px;
+    }
+
+    .info-box-text {
+        color: #555;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* Cancel Button */
+    .btn-cancel {
+        padding: 10px 24px;
+        background: #f0f2f5;
+        color: #2c3e50;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .btn-cancel:hover {
+        background: #e8eaed;
+        border-color: #bbb;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .ward-form-container {
+            padding: 25px;
+            margin: 20px;
+        }
+
+        .ward-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .ward-header h1 {
+            font-size: 24px;
+        }
+
+        .ward-header-icon {
+            font-size: 32px;
+        }
+
+        #addWardForm {
+            gap: 20px;
+        }
+
+        .form-submit-group {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="ward-header">
+    <div class="ward-header-icon">📍</div>
+    <div>
+        <h1>Add New Ward</h1>
+        <p class="ward-breadcrumb">
+            <a href="{% url 'admin_index' %}">Dashboard</a> / 
+            <a href="{% url 'list_wards' %}">Wards</a> / 
+            <span>Add New</span>
+        </p>
     </div>
 </div>
+
+<div class="ward-form-container">
+    <!-- Info Box -->
+    <div class="info-box">
+        <div class="info-box-title">
+            <i class="fas fa-circle-info"></i>
+            Ward Information
+        </div>
+        <div class="info-box-text">
+            Add a new ward to the system. Provide a unique ward number and its geographic location range (From-To) for efficient waste collection routing.
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    {% if error_message %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <!-- Add Ward Form -->
+    <form id="addWardForm" method="POST">
+        {% csrf_token %}
+
+        <!-- Ward Number Field -->
+        <div class="form-group">
+            <label for="ward_number">
+                <i class="fas fa-hashtag"></i> Ward Number
+            </label>
+            <input 
+                type="number" 
+                name="ward_number" 
+                id="ward_number" 
+                placeholder="e.g., 1, 2, 3" 
+                min="1"
+                required
+            >
+        </div>
+
+        <!-- Location Field -->
+        <div class="form-group">
+            <label for="location">
+                <i class="fas fa-map-pin"></i> Location (From-To)
+            </label>
+            <input 
+                type="text" 
+                name="location" 
+                id="location" 
+                placeholder="e.g., North Street - South Avenue" 
+                required
+            >
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-submit-group">
+            <input type="submit" value="Add Ward">
+        </div>
+    </form>
+
+    <!-- Cancel Link -->
+    <div style="margin-top: 15px;">
+        <a href="{% url 'list_wards' %}" class="btn-cancel">
+            <i class="fas fa-arrow-left"></i> Cancel
+        </a>
+    </div>
+</div>
+
+<script>
+    // Form validation
+    document.getElementById('addWardForm').addEventListener('submit', function(e) {
+        const wardNumber = document.getElementById('ward_number').value.trim();
+        const location = document.getElementById('location').value.trim();
+
+        if (!wardNumber || wardNumber <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid ward number (greater than 0)');
+            return;
+        }
+
+        if (!location) {
+            e.preventDefault();
+            alert('Please enter the location range');
+            return;
+        }
+    });
+</script>
+
 {% endblock %}

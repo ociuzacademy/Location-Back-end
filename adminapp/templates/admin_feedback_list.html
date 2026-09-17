@@ -1,32 +1,411 @@
 {% extends 'admin_index.html' %}
 
 {% block content %}
-<h2>Feedback List</h2>
+<style>
+    /* Feedback List Page Styles */
+    .feedback-header {
+        margin-bottom: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
 
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Rate</th>
-            <th>Feedback</th>
-            <th>Submitted At</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for feedback in feedbacks %}
-        <tr>
-            <td>{{ feedback.id }}</td>
-            <td>{{ feedback.user.name }}</td>
-            <td>{{ feedback.rate }}/5</td>
-            <td>{{ feedback.feedback }}</td>
-            <td>{{ feedback.created_at }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">No feedback available.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    .feedback-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .feedback-header h1 {
+        font-size: 32px;
+        color: #2c3e50;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .feedback-header-icon {
+        font-size: 40px;
+    }
+
+    .feedback-breadcrumb {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .feedback-breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .feedback-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    /* Table Container */
+    .feedback-table-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        overflow: hidden;
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Table Styling */
+    .feedback-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+    }
+
+    .feedback-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .feedback-table th {
+        padding: 16px 20px;
+        text-align: left;
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+
+    .feedback-table th:first-child {
+        border-radius: 8px 0 0 0;
+    }
+
+    .feedback-table th:last-child {
+        border-radius: 0 8px 0 0;
+    }
+
+    .feedback-table td {
+        padding: 16px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 15px;
+        color: #2c3e50;
+        vertical-align: middle;
+    }
+
+    .feedback-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .feedback-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .feedback-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Feedback ID Badge */
+    .feedback-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    /* User Cell */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Star Rating */
+    .star-rating {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .star-rating .stars {
+        display: flex;
+        gap: 2px;
+        color: #ffc107;
+        font-size: 14px;
+    }
+
+    .star-rating .stars .empty {
+        color: #e5e7eb;
+    }
+
+    .star-rating .rate-text {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 13px;
+        margin-left: 4px;
+    }
+
+    /* Feedback Text */
+    .feedback-text {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+        max-width: 350px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Date Cell */
+    .date-cell {
+        color: #666;
+        font-size: 13px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .date-cell i {
+        color: #667eea;
+        font-size: 12px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 20px;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: #999;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #667eea;
+        flex-wrap: wrap;
+    }
+
+    .stats-bar i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .stats-bar span {
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .stats-bar strong {
+        color: #667eea;
+    }
+
+    .stats-bar .divider {
+        color: #ddd;
+        margin: 0 8px;
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .feedback-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .feedback-header h1 {
+            font-size: 24px;
+        }
+
+        .feedback-header-icon {
+            font-size: 32px;
+        }
+
+        .feedback-table-container {
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .feedback-table th,
+        .feedback-table td {
+            padding: 12px 15px;
+            font-size: 13px;
+        }
+
+        .feedback-text {
+            max-width: 200px;
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .stats-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .stats-bar .divider {
+            display: none;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Header -->
+<div class="feedback-header">
+    <div class="feedback-header-left">
+        <div class="feedback-header-icon">💬</div>
+        <div>
+            <h1>Feedback List</h1>
+            <p class="feedback-breadcrumb">
+                <a href="{% url 'admin_index' %}">Dashboard</a> / 
+                <span>Feedback</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <i class="fas fa-comments"></i>
+    <span>Total Feedback: <strong>{{ feedbacks|length }}</strong></span>
+    <span class="divider">|</span>
+    <i class="fas fa-star" style="color: #ffc107;"></i>
+    <span>All ratings displayed out of <strong>5</strong></span>
+</div>
+
+<!-- Table Container -->
+<div class="feedback-table-container">
+    {% if feedbacks %}
+    <table class="feedback-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Rating</th>
+                <th>Feedback</th>
+                <th>Submitted At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feedback in feedbacks %}
+            <tr>
+                <td>
+                    <span class="feedback-id-badge">#{{ feedback.id }}</span>
+                </td>
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar">
+                            {{ feedback.user.name|slice:":1"|upper }}
+                        </div>
+                        <span class="user-name">{{ feedback.user.name }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="star-rating">
+                        <div class="stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= feedback.rate %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="fas fa-star empty"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="rate-text">{{ feedback.rate }}/5</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="feedback-text" title="{{ feedback.feedback }}">
+                        {{ feedback.feedback }}
+                    </div>
+                </td>
+                <td>
+                    <div class="date-cell">
+                        <i class="fas fa-clock"></i>
+                        {{ feedback.created_at }}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <h3>No Feedback Available</h3>
+        <p>Feedback submitted by users will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+
 {% endblock %}
